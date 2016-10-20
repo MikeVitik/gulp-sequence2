@@ -1,0 +1,20 @@
+{
+  "name": "gulp-sequence2",
+  "description": "Run a series of gulp tasks or functions in order.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Mike Vitik<vitikm@gmail.com>"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:MikeVitik/gulp-sequence2.git"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "gulp-util": ">=3.0.0",
+    "stream-to-promise": ">=2.2.0"
+  },
+  "peerDependencies": {
+    "gulp": ">=3.9.1"
+  }
+}

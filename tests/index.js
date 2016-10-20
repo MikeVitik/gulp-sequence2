@@ -1,10 +1,9 @@
-# gulp-sequence2
+'use strict'
+/* global */
 
-[![NPM](https://nodei.co/npm/gulp-sequence2.png)](https://npmjs.org/package/gulp--sequence2)
+var gulp = require('gulp');
+var seq2 = require('../index');
 
-A plugin for [Gulp](https://github.com/gulpjs/gulp) allow to write task as a function and combine it in funcitonal style. It usefull for reducing count of gulp tasks. 
-
-## usage
 
 function createTestTask(id, t) {
     return (cb) => {
@@ -15,6 +14,8 @@ function createTestTask(id, t) {
                 }, t);
     }
 }
+
+module.exports = function() {
 
 gulp.task("tmp1", (cb) => { 
     console.log("tmp1");
@@ -37,17 +38,4 @@ gulp.task("tmp", seq2(
     Tmp2Task
 ));
 
-[17:36:30] Starting 'tmp'...
-file stream
-[17:36:30] Starting 'tmp1'...
-tmp1
-[17:36:32] Finished 'tmp1' after 2 s
-start:parallel1
-parallel1
-start:seguance task 1
-start:seguance task 2
-seguance task 2
-seguance task 1
-start:parallel2
-parallel2
-[17:36:34] Finished 'tmp' after 3.82 s
+}
