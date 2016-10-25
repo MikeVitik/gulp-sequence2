@@ -98,7 +98,7 @@ module.exports = function() {
                 };
             }
             return res;
-        }, cb);
+        }, function() { cb(); });
         result();
     };
 };

@@ -1,7 +1,7 @@
 {
   "name": "gulp-sequence2",
   "description": "Run a series of gulp tasks or functions in order.",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "author": {
     "name": "Mike Vitik<vitikm@gmail.com>"
   },
