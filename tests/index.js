@@ -7,9 +7,9 @@ var seq2 = require('../index');
 
 function createTestTask(id, t) {
     return (cb) => {
-            console.log("start:" + id);
+            console.log(">" + id);
             setTimeout(() => { 
-                console.log(id);
+                console.log("<" + id);
                 cb();
                 }, t);
     }
@@ -24,18 +24,24 @@ gulp.task("tmp1", (cb) => {
     }, 2000); 
 });
 
-var Tmp2Task = seq2(
+function UsedSequence2Task(cb) { seq2(
     createTestTask("parallel1", 500),
-    [createTestTask("seguance task 1", 800), createTestTask("seguance task 2", 500)],
+    [createTestTask("sequance task 1", 800), createTestTask("sequance task 2", 500)],
     createTestTask("parallel2", 500)
-);
+    )(cb);
+}
+
+function NamedFunctionTask(cb) {
+    setTimeout(cb, 200);
+}
 
 //gulp.task("tmp2", Tmp2Task);
 
 gulp.task("tmp", seq2(
+    NamedFunctionTask,
     () => { console.log("file stream"); return gulp.src("*.js"); },
     "tmp1",
-    Tmp2Task
+    UsedSequence2Task
 ));
 
 }

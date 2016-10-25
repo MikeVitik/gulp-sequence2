@@ -1,21 +1,32 @@
+/*jslint devel: true, maxerr: 50, node: true, es6: true, white: true */ /*global define */
+
+"use strict";
+
 var streamToPromise = require("stream-to-promise");
+var gutil = require('gulp-util');
 var gulp = require("gulp");
 
+
+function logError(error) {
+    var err = new gutil.PluginError('sequence2', error, {showStack: true});
+}
+
 function taskToPromise(task) {
-    return new Promise((r, e) => {
-        function removeListener() {
-            (gulp).removeListener("task_stop", successListener)
-                .removeListener("task_not_found", errorListener)
-                .removeListener("task_recursion", errorListener)
-                .removeListener("task_err", errorListener);
-        };
-        function successListener(e) {
+    return new Promise(function (r) {
+        function successListener() {
             removeListener();
             r();
         }
         function errorListener(e) {
             removeListener();
-            e(e.err);
+            logError(e.err)
+            //errorPlugin.log(e.err);
+        }
+        function removeListener() {
+            (gulp).removeListener("task_stop", successListener)
+                .removeListener("task_not_found", errorListener)
+                .removeListener("task_recursion", errorListener)
+                .removeListener("task_err", errorListener);
         }
         gulp
             .on("task_stop", successListener)
@@ -27,61 +38,67 @@ function taskToPromise(task) {
 }
 
 function toPromise(task) {
-    if ((typeof task === "string")) {
+    if (typeof task === "string") {
         return taskToPromise(task);
     } else {
+        if (task.name) {
+            gutil.log("Starting '" + task.name + "'...");
+        }
         var immediateRes,
-        resolve, 
-        promise = new Promise((r, err) => {
-            try {
-                resolve = r;
-                //var resolve = () => { debugger; r();}
-                immediateRes = task(r);
-            } catch (error) {
-                err(error);
-            }
-        });
-        if(immediateRes === null) {
+            resolve,
+            promise = new Promise(function(r, err) {
+                try {
+                    resolve = function () {
+                        if (task.name) {
+                            gutil.log("Finished '" + task.name + "'");
+                        }
+                        r();
+                    };
+                    immediateRes = task(r);
+                } catch (error) {
+                    err(error);
+                }
+            });
+        if (immediateRes === null) {
             resolve();
             return promise;
         }
-        if(immediateRes === undefined) {
+        if (immediateRes === undefined) {
             return promise;
         }
-        if (!immediateRes.then) {
+        if (gutil.isStream(immediateRes)) {
             return streamToPromise(immediateRes);
         } else {
-            return promise;
+            return immediateRes;
         }
     }
 }
 
-module.exports = function () {
+module.exports = function() {
     var args = Array.prototype.slice.call(arguments);
-    return (cb) => {
-        return new Promise((r, e) => {
-            var result = args.reduceRight((acc, t) => {
-                var res;
-                if (Array.isArray(t)) {
-                    res = () => {
-                        //return Promise.all((t).map((_t) => { return (typeof _t === "string") ? taskToPromise(_t) : (streamToPromise(_t())); }))
-                        Promise.all((t).map(toPromise))
-                            .then(acc)
-                            .catch(e);
-                    };
-                } else {
-                    res = () => {
-                        //return (((typeof t === "string") ? taskToPromise(t) : (streamToPromise(t()))))
-                        return toPromise(t)
-                            .then(acc)
-                            .catch(e);
-                    };
-                }
-                return res;
-            }, () => {
-                cb(); 
-            });
-            result();
-        });
-    }
-}
+    return function (cb) {
+        var result = args.reduceRight(function(acc, t) {
+            var res;
+            if (Array.isArray(t)) {
+                res = function() {
+                    Promise.all((t).map(toPromise))
+                        .then(acc)
+                        .catch(logError);
+                };
+            } else {
+                res = function () {
+                    return toPromise(t)
+                        .then(function () {
+                            if(t.name) {
+                                gutil.log("Finished '" + t.name + "'");
+                            }
+                            acc();
+                        })
+                        .catch(logError);
+                };
+            }
+            return res;
+        }, cb);
+        result();
+    };
+};

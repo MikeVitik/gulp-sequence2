@@ -16,13 +16,15 @@ npm install --save-dev gulp-sequence2
 ```js
 function createTestTask(id, t) {
     return (cb) => {
-            console.log("start:" + id);
+            console.log(">" + id);
             setTimeout(() => { 
-                console.log(id);
+                console.log("<" + id);
                 cb();
                 }, t);
     }
 }
+
+module.exports = function() {
 
 gulp.task("tmp1", (cb) => { 
     console.log("tmp1");
@@ -31,34 +33,35 @@ gulp.task("tmp1", (cb) => {
     }, 2000); 
 });
 
-var Tmp2Task = seq2(
+function UsedSequence2Task(cb) { seq2(
     createTestTask("parallel1", 500),
-    [createTestTask("seguance task 1", 800), createTestTask("seguance task 2", 500)],
+    [createTestTask("sequance task 1", 800), createTestTask("sequance task 2", 500)],
     createTestTask("parallel2", 500)
-);
+    )(cb);
+}
 
-//gulp.task("tmp2", Tmp2Task);
-
-gulp.task("tmp", seq2(
-    () => { console.log("file stream"); return gulp.src("*.js"); },
-    "tmp1",
-    Tmp2Task
-));
+function NamedFunctionTask(cb) {
+    setTimeout(cb, 200);
+}
 ```
 
 ```
-[17:36:30] Starting 'tmp'...
+[11:09:19] Starting 'tmp'...
+[11:09:19] Starting 'NamedFunctionTask'...
+[11:09:20] Finished 'NamedFunctionTask'
 file stream
-[17:36:30] Starting 'tmp1'...
+[11:09:20] Starting 'tmp1'...
 tmp1
-[17:36:32] Finished 'tmp1' after 2 s
-start:parallel1
-parallel1
-start:seguance task 1
-start:seguance task 2
-seguance task 2
-seguance task 1
-start:parallel2
-parallel2
-[17:36:34] Finished 'tmp' after 3.82 s
+[11:09:22] Finished 'tmp1' after 2 s
+[11:09:22] Starting 'UsedSequence2Task'...
+>parallel1
+<parallel1
+>sequance task 1
+>sequance task 2
+<sequance task 2
+<sequance task 1
+>parallel2
+<parallel2
+[11:09:23] Finished 'UsedSequence2Task'
+[11:09:23] Finished 'tmp' after 4.02 s
 ```
