@@ -9,6 +9,7 @@ var gulp = require("gulp");
 
 function logError(error) {
     var err = new gutil.PluginError('sequence2', error, {showStack: true});
+    gutil.log(err);
 }
 
 function taskToPromise(task) {
